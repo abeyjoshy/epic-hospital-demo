@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Epic Hospital</title>
+</head>
+<body>
+  <h1>Epic Hospital System</h1>
+
+  <div id="loginSection">
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
+    <button id="loginBtn">Login</button>
+    <p id="loginError"></p>
+  </div>
+
+  <div id="appSection" style="display:none;">
+    <h2>Patients</h2>
+    <input type="text" id="searchInput" placeholder="Search by name or MRN" />
+    <button id="searchBtn">Search</button>
+    <ul id="patientList"></ul>
+    <button id="prevBtn">Previous</button>
+    <span id="pageInfo"></span>
+    <button id="nextBtn">Next</button>
+  </div>
+
+  <div id="patientDetail" style="display:none;">
+  <button id="backBtn">&larr; Back to list</button>
+  <h2 id="detailName"></h2>
+  <p id="detailInfo"></p>
+
+  <h3>Diagnoses</h3>
+  <ul id="detailDiagnoses"></ul>
+
+    <h4>Add New Diagnosis</h4>
+    <input type="text" id="newDiagnosisLabel" placeholder="Diagnosis" />
+    <input type="text" id="newDiagnosisNote" placeholder="Note (optional)" />
+    <button id="addDiagnosisBtn">Add</button>
+
+    <h3>Medications</h3>
+    <ul id="detailMedications"></ul>
+
+    <h4>Add New Medication</h4>
+    <select id="newMedDiagnosis"></select>
+    <input type="text" id="newMedName" placeholder="Medication" />
+    <input type="text" id="newMedDosage" placeholder="Dosage" />
+    <input type="text" id="newMedFrequency" placeholder="Frequency" />
+    <button id="addMedicationBtn">Add</button>
+
+  <h3>Allergies</h3>
+  <ul id="detailAllergies"></ul>
+</div>
+
+  <script>
+    const API = "http://localhost:4000";
+
+    document.getElementById("loginBtn").addEventListener("click", async () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      const res = await fetch(`${API}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        document.getElementById("loginError").textContent = data.message;
+        return;
+      }
+
+      document.getElementById("loginSection").style.display = "none";
+      document.getElementById("appSection").style.display = "block";
+      loadPatients();
+    });
+
+let currentPage = 1;
+
+async function loadPatients(page = 1) {
+    currentPage = page;
+    const search = document.getElementById("searchInput").value;
+
+    const res = await fetch(`${API}/patients?search=${encodeURIComponent(search)}&page=${page}&limit=5`);
+    const data = await res.json();
+
+    const list = document.getElementById("patientList");
+    list.innerHTML = "";
+    data.patients.forEach((p) => {
+        const li = document.createElement("li");
+        li.textContent = `${p.firstName} ${p.lastName} (MRN: ${p.mrn})`;
+        li.style.cursor = "pointer";
+        li.addEventListener("click", () => showPatient(p.mrn));
+        list.appendChild(li);
+    });
+
+    document.getElementById("pageInfo").textContent = `Page ${data.page} of ${data.totalPages || 1}`;
+    }
+
+    document.getElementById("searchBtn").addEventListener("click", () => loadPatients(1));
+    document.getElementById("prevBtn").addEventListener("click", () => {
+    if (currentPage > 1) loadPatients(currentPage - 1);
+    });
+    document.getElementById("nextBtn").addEventListener("click", () => loadPatients(currentPage + 1));
+
+
+    let currentMrn = null;
+
+    async function showPatient(mrn) {
+    currentMrn = mrn;
+    const res = await fetch(`${API}/patients/${mrn}`);
+    const data = await res.json();
+    const patient = data.patient;
+
+    document.getElementById("appSection").style.display = "none";
+    document.getElementById("patientDetail").style.display = "block";
+
+    document.getElementById("detailName").textContent = `${patient.firstName} ${patient.lastName}`;
+    document.getElementById("detailInfo").textContent = `MRN: ${patient.mrn} | DOB: ${patient.dob} | Sex: ${patient.sex}`;
+
+    const diagnosesList = document.getElementById("detailDiagnoses");
+    diagnosesList.innerHTML = "";
+    patient.diagnoses.forEach((d) => {
+        const li = document.createElement("li");
+        li.textContent = `${d.label} (diagnosed ${d.diagnosedOn}) — ${d.note || ""}`;
+        diagnosesList.appendChild(li);
+    });
+
+    const allergiesList = document.getElementById("detailAllergies");
+    allergiesList.innerHTML = "";
+    patient.allergies.forEach((a) => {
+        const li = document.createElement("li");
+        li.textContent = `${a.substance}: ${a.reaction} — ${a.note || ""}`;
+        allergiesList.appendChild(li);
+    });
+
+    const diagnosisSelect = document.getElementById("newMedDiagnosis");
+    diagnosisSelect.innerHTML = '<option value="">General (not linked to a diagnosis)</option>';
+    patient.diagnoses.forEach((d) => {
+        const option = document.createElement("option");
+        option.value = d._id;
+        option.textContent = `${d.label} (${d.diagnosedOn})`;
+        diagnosisSelect.appendChild(option);
+    });
+
+    const medsList = document.getElementById("detailMedications");
+    medsList.innerHTML = "";
+    patient.medications.forEach((m) => {
+        const li = document.createElement("li");
+        const linked = patient.diagnoses.find((d) => d._id === m.relatedDiagnosisId);
+        li.textContent = `${m.name} — ${m.dosage}, ${m.frequency}${linked ? ` — for ${linked.label}` : ""}`;
+        medsList.appendChild(li);
+    });
+    }
+
+    document.getElementById("backBtn").addEventListener("click", () => {
+    document.getElementById("patientDetail").style.display = "none";
+    document.getElementById("appSection").style.display = "block";
+    });
+
+
+    document.getElementById("addMedicationBtn").addEventListener("click", async () => {
+    const name = document.getElementById("newMedName").value;
+    const dosage = document.getElementById("newMedDosage").value;
+    const frequency = document.getElementById("newMedFrequency").value;
+    const diagnosisId = document.getElementById("newMedDiagnosis").value;
+
+    if (!name) return;
+
+    const res = await fetch(`${API}/patients/${currentMrn}/medications`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, dosage, frequency, diagnosisId: diagnosisId || null }),
+    });
+
+    if (res.ok) {
+        document.getElementById("newMedName").value = "";
+        document.getElementById("newMedDosage").value = "";
+        document.getElementById("newMedFrequency").value = "";
+        showPatient(currentMrn);
+    }
+    });
+
+    document.getElementById("addDiagnosisBtn").addEventListener("click", async () => {
+    const label = document.getElementById("newDiagnosisLabel").value;
+    const note = document.getElementById("newDiagnosisNote").value;
+
+    if (!label) return;
+
+    const res = await fetch(`${API}/patients/${currentMrn}/diagnoses`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ label, note }),
+    });
+
+    if (res.ok) {
+        document.getElementById("newDiagnosisLabel").value = "";
+        document.getElementById("newDiagnosisNote").value = "";
+        showPatient(currentMrn); // re-fetch so the new diagnosis shows immediately
+    }
+    });
+
+  </script>
+</body>
+</html>
