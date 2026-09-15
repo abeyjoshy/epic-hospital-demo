@@ -23,6 +23,35 @@ export function initPatients() {
     historyList.style.display = isHidden ? "block" : "none";
     e.target.textContent = isHidden ? "Hide History" : "Show History";
   });
+
+  document.getElementById("addPatientBtn").addEventListener("click", addPatient);
+}
+
+async function addPatient() {
+  const firstName = document.getElementById("newPatientFirstName").value;
+  const lastName = document.getElementById("newPatientLastName").value;
+  const dob = document.getElementById("newPatientDob").value;
+  const sex = document.getElementById("newPatientSex").value;
+  const phone = document.getElementById("newPatientPhone").value;
+  const ppsn = document.getElementById("newPatientPpsn").value;
+
+  if (!firstName || !lastName || !dob) return;
+
+  const res = await fetch(`${API}/patients`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ firstName, lastName, dob, sex, phone, ppsn }),
+  });
+
+  if (res.ok) {
+    document.getElementById("newPatientFirstName").value = "";
+    document.getElementById("newPatientLastName").value = "";
+    document.getElementById("newPatientDob").value = "";
+    document.getElementById("newPatientSex").value = "";
+    document.getElementById("newPatientPhone").value = "";
+    document.getElementById("newPatientPpsn").value = "";
+    loadPatients(state.currentPage);
+  }
 }
 
 export async function loadPatients(page = 1) {

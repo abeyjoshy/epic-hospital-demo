@@ -39,6 +39,23 @@
 
   <div id="appSection" style="display:none;">
     <div class="card">
+      <h3 class="section-title">Add New Patient</h3>
+      <div class="add-form">
+        <input type="text" id="newPatientFirstName" placeholder="First name" />
+        <input type="text" id="newPatientLastName" placeholder="Last name" />
+        <input type="date" id="newPatientDob" />
+        <select id="newPatientSex">
+          <option value="">Sex</option>
+          <option value="M">M</option>
+          <option value="F">F</option>
+        </select>
+        <input type="text" id="newPatientPhone" placeholder="Phone (optional)" />
+        <input type="text" id="newPatientPpsn" placeholder="PPSN (optional)" />
+        <button id="addPatientBtn">Add Patient</button>
+      </div>
+    </div>
+
+    <div class="card">
       <div class="search-row">
         <input type="text" id="searchInput" placeholder="Search by name or MRN" />
         <button id="searchBtn">Search</button>
