@@ -68,7 +68,12 @@ export async function showPatient(mrn) {
   allergiesList.innerHTML = patient.allergies.length ? "" : `<li class="empty-note">No known allergies.</li>`;
   patient.allergies.forEach((a) => {
     const li = document.createElement("li");
-    li.innerHTML = `<strong>${a.substance}</strong>: ${a.reaction} <span class="muted">${a.note || ""}</span>`;
+    li.className = "allergy-item";
+    li.innerHTML = `
+      <span class="allergy-substance">&#9888;&#65039; ${a.substance}</span>
+      <span class="allergy-reaction">${a.reaction || ""}</span>
+      ${a.note ? `<div class="allergy-note">${a.note}</div>` : ""}
+    `;
     allergiesList.appendChild(li);
   });
 
@@ -97,7 +102,13 @@ function renderHistory(patient) {
       <strong>${d.label}</strong> <span class="muted">(${d.diagnosedOn})</span><br>
       <span class="muted">${d.note || ""}</span>
       ${linkedMeds.length
-        ? `<ul class="nested-meds">${linkedMeds.map((m) => `<li>&#128138; ${m.name} — ${m.dosage}, ${m.frequency}</li>`).join("")}</ul>`
+        ? `<ul class="nested-meds">${linkedMeds.map((m) => `
+            <li>
+              <div class="med-name">&#128138; ${m.name}</div>
+              <div class="med-detail">${[m.dosage, m.frequency].filter(Boolean).join(", ")}</div>
+              ${m.note ? `<div class="med-note">${m.note}</div>` : ""}
+            </li>
+          `).join("")}</ul>`
         : ""}
     `;
     history.appendChild(li);

@@ -5,6 +5,7 @@ import { showPatient } from "./patients.js";
 // Wires up the single "Save Visit" action on the patient detail view.
 export function initRecords() {
   document.getElementById("saveVisitBtn").addEventListener("click", saveVisit);
+  document.getElementById("addAllergyBtn").addEventListener("click", addAllergy);
 }
 
 // One visit = one diagnosis (title + note) plus, optionally, one medication
@@ -19,6 +20,7 @@ async function saveVisit() {
   const medName = document.getElementById("visitMedName").value;
   const medDosage = document.getElementById("visitMedDosage").value;
   const medFrequency = document.getElementById("visitMedFrequency").value;
+  const medNote = document.getElementById("visitMedNote").value;
 
   if (!label) return;
 
@@ -42,6 +44,7 @@ async function saveVisit() {
         name: medName,
         dosage: medDosage,
         frequency: medFrequency,
+        note: medNote,
         diagnosisId: newDiagnosis._id,
       }),
     });
@@ -52,6 +55,28 @@ async function saveVisit() {
   document.getElementById("visitMedName").value = "";
   document.getElementById("visitMedDosage").value = "";
   document.getElementById("visitMedFrequency").value = "";
+  document.getElementById("visitMedNote").value = "";
 
   showPatient(state.currentMrn); // refresh so the new visit appears in history immediately
+}
+
+async function addAllergy() {
+  const substance = document.getElementById("newAllergySubstance").value;
+  const reaction = document.getElementById("newAllergyReaction").value;
+  const note = document.getElementById("newAllergyNote").value;
+
+  if (!substance) return;
+
+  const res = await fetch(`${API}/patients/${state.currentMrn}/allergies`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ substance, reaction, note }),
+  });
+
+  if (res.ok) {
+    document.getElementById("newAllergySubstance").value = "";
+    document.getElementById("newAllergyReaction").value = "";
+    document.getElementById("newAllergyNote").value = "";
+    showPatient(state.currentMrn);
+  }
 }

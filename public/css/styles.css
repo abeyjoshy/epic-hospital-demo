@@ -96,10 +96,44 @@ textarea {
 
 .nested-meds {
   list-style: none;
-  margin: 6px 0 0 14px;
+  margin: 8px 0 0 14px;
   padding: 0;
-  font-size: 13px;
+}
+
+.nested-meds li {
+  border-left: 3px solid var(--primary);
+  background: #f0f7fd;
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+}
+
+.nested-meds .med-name { font-weight: 600; font-size: 13px; }
+.nested-meds .med-detail { color: var(--text-muted); font-size: 13px; }
+.nested-meds .med-note {
+  font-size: 12px;
   color: var(--text-muted);
+  font-style: italic;
+  margin-top: 3px;
+}
+
+.allergy-item {
+  list-style: none;
+  border-bottom: none;
+  border-left: 3px solid var(--danger);
+  background: #fef2f2;
+  border-radius: 4px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.allergy-substance { font-weight: 600; font-size: 14px; }
+.allergy-reaction { font-size: 13px; color: var(--text-muted); margin-left: 6px; }
+.allergy-note {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-top: 4px;
 }
 
 button {
