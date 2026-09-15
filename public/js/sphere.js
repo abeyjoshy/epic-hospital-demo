@@ -4,6 +4,10 @@
 import { state } from "./state.js";
 
 const SPHERE_ORIGIN = "http://localhost:3000";
+// Epic's own origin, told to the widget explicitly (via ?origin=) every time
+// its src is set — this is how a generic, vendor-agnostic widget knows who
+// it's talking to right now, instead of Epic being hardcoded inside it.
+const EPIC_OWN_ORIGIN = "http://localhost:4000";
 
 export function initSphere() {
   document.getElementById("connectSphereBtn").addEventListener("click", () => {
@@ -15,12 +19,22 @@ export function initSphere() {
     // Reloading the iframe's src is fine — the cached SPHERE token lives in
     // localStorage, which survives a reload; only the widget's in-memory JS
     // state resets, and it re-checks localStorage on load anyway.
-    frame.src = `http://localhost:3000/widget.html?mrn=${encodeURIComponent(state.currentMrn)}`;
+    frame.src = `http://localhost:3000/widget.html?mrn=${encodeURIComponent(state.currentMrn)}&origin=${encodeURIComponent(EPIC_OWN_ORIGIN)}`;
     document.getElementById("sphereModal").style.display = "flex";
   });
 
   document.getElementById("closeSphereModalBtn").addEventListener("click", () => {
     document.getElementById("sphereModal").style.display = "none";
+  });
+
+  document.getElementById("syncSphereBtn").addEventListener("click", () => {
+    // No modal shown — this runs in the background through the iframe, which
+    // stays loaded (just hidden) so it still has the cached SPHERE token.
+    const frame = document.getElementById("sphereFrame");
+    frame.contentWindow.postMessage(
+      { type: "sphere-sync", mrn: state.currentMrn },
+      SPHERE_ORIGIN
+    );
   });
 
   window.addEventListener("message", (event) => {
@@ -32,13 +46,28 @@ export function initSphere() {
       document.getElementById("sphereModal").style.display = "none";
       setConnected();
     }
+
+    if (event.data?.type === "sphere-sync-result") {
+      showToast(event.data.success, event.data.message);
+    }
   });
 }
 
+function showToast(success, message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.className = `toast ${success ? "success" : "error"}`;
+  toast.style.display = "block";
+
+  setTimeout(() => {
+    toast.style.display = "none";
+  }, 4000);
+}
+
 function setConnected() {
-  const status = document.getElementById("sphereStatus");
-  status.textContent = "SPHERE: Connected";
-  status.classList.add("connected");
+  const btn = document.getElementById("connectSphereBtn");
+  btn.textContent = "SPHERE: Connected";
+  btn.classList.add("connected");
 }
 
 // Called from auth.js on Epic logout. The iframe stays loaded in the page even
@@ -48,7 +77,7 @@ export function disconnectSphere() {
   const frame = document.getElementById("sphereFrame");
   frame.contentWindow.postMessage({ type: "sphere-logout" }, SPHERE_ORIGIN);
 
-  const status = document.getElementById("sphereStatus");
-  status.textContent = "SPHERE: Not Connected";
-  status.classList.remove("connected");
+  const btn = document.getElementById("connectSphereBtn");
+  btn.textContent = "SPHERE: Not Connected";
+  btn.classList.remove("connected");
 }

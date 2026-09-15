@@ -12,8 +12,7 @@
   <h1>&#127973; Epic Hospital System</h1>
   <div class="doctor-info" id="doctorInfo" style="display:none;">
     <span id="doctorName"></span>
-    <span id="sphereStatus" class="sphere-status disconnected">SPHERE: Not Connected</span>
-    <button class="secondary" id="connectSphereBtn">Connect SPHERE</button>
+    <button id="connectSphereBtn">SPHERE: Not Connected</button>
     <button id="logoutBtn">Logout</button>
   </div>
 </header>
@@ -21,9 +20,11 @@
 <div id="sphereModal" class="sphere-modal-overlay" style="display:none;">
   <div class="sphere-modal-box">
     <button class="sphere-modal-close" id="closeSphereModalBtn">&times;</button>
-    <iframe id="sphereFrame" src="http://localhost:3000/widget.html"></iframe>
+    <iframe id="sphereFrame" src="http://localhost:3000/widget.html?origin=http://localhost:4000"></iframe>
   </div>
 </div>
+
+<div id="toast" class="toast" style="display:none;"></div>
 
 <div class="container">
 
@@ -76,6 +77,7 @@
       <h2 id="detailName"></h2>
       <p id="detailInfo"></p>
       <button class="secondary" id="accessSphereBtn" style="margin-top:8px;">Access SPHERE Data</button>
+      <button class="secondary" id="syncSphereBtn" style="margin-top:8px;">Sync to SPHERE</button>
     </div>
 
     <div class="card">

@@ -237,14 +237,26 @@ button.secondary:hover { background: #eef5fc; }
 
 .back-link:hover { background: none; text-decoration: underline; }
 
-.sphere-status {
+/* ID selector, not a class — this element's color state must never lose to the
+   generic `button`/`button:hover` rules above, which an equal-specificity class
+   could lose to depending on stylesheet order. */
+#connectSphereBtn {
   font-size: 12px;
-  padding: 3px 10px;
-  border-radius: 10px;
+  padding: 5px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
   background: rgba(255, 255, 255, 0.15);
+  color: white;
 }
 
-.sphere-status.connected { background: #16a34a; }
+#connectSphereBtn:hover { background: rgba(255, 255, 255, 0.28); }
+
+#connectSphereBtn.connected {
+  background: #16a34a;
+  border-color: #16a34a;
+}
+
+#connectSphereBtn.connected:hover { background: #128a3e; }
 
 .sphere-modal-overlay {
   position: fixed;
@@ -260,9 +272,9 @@ button.secondary:hover { background: #eef5fc; }
   background: white;
   border-radius: 8px;
   position: relative;
-  width: 420px;
+  width: 680px;
   max-width: 90vw;
-  height: 380px;
+  height: 640px;
   max-height: 85vh;
   overflow: hidden;
 }
@@ -286,3 +298,19 @@ button.secondary:hover { background: #eef5fc; }
   height: 100%;
   border: none;
 }
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 2000;
+}
+
+.toast.success { background: #16a34a; }
+.toast.error { background: #dc2626; }
