@@ -11,14 +11,22 @@
 
 * { box-sizing: border-box; }
 
+/* App-shell layout: the page itself never scrolls (like a desktop app window).
+   Only specific panels inside it — the patient list, the history column —
+   scroll internally, via `overflow-y: auto` further down. */
+html, body { height: 100%; margin: 0; }
+
 body {
-  margin: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   font-family: "Segoe UI", Roboto, Arial, sans-serif;
   background: var(--bg);
   color: var(--text);
 }
 
 header {
+  flex-shrink: 0;
   background: var(--primary);
   color: white;
   padding: 14px 24px;
@@ -49,9 +57,147 @@ header button {
 header button:hover { background: rgba(255, 255, 255, 0.28); }
 
 .container {
-  max-width: 960px;
-  margin: 24px auto;
-  padding: 0 16px 60px;
+  flex: 1;
+  min-height: 0; /* lets a flex child shrink below its content size instead of
+                    overflowing — without this, the panels below couldn't
+                    scroll internally and the whole page would scroll instead */
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.app-shell {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.home-toolbar {
+  flex-shrink: 0;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.home-toolbar input { margin: 0; flex: 1; }
+
+.home-list-panel {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.detail-topbar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+}
+
+.detail-topbar .back-link { margin: 0; flex-shrink: 0; }
+.detail-topbar-info { flex: 1; min-width: 0; }
+.detail-topbar-info h2 { margin: 0 0 2px 0; font-size: 17px; }
+.detail-topbar-info p { margin: 0; color: var(--text-muted); font-size: 13px; }
+.detail-topbar-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+.detail-columns {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 16px;
+}
+
+/* 3:2 split — left (entry form) wider than right (history + allergies), and
+   both scale with the window instead of a fixed pixel width. */
+.detail-col-left {
+  flex: 3;
+  min-width: 420px;
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-col-left .card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.detail-col-left textarea {
+  flex: 1;
+  min-height: 120px;
+}
+
+.detail-col-right {
+  flex: 2;
+  min-width: 280px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.detail-history-card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+#detailHistory {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.detail-allergy-card {
+  flex-shrink: 0;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.full-history-columns {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 16px;
+}
+
+/* 2:1 — the medical timeline is the dominant view; allergies sit alongside
+   it as a narrower reference column. */
+.full-history-timeline {
+  flex: 2;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.full-history-timeline #fullHistoryList {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.full-history-allergies {
+  flex: 1;
+  min-width: 260px;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .card {
@@ -86,14 +232,6 @@ textarea {
   min-height: 100px;
 }
 
-.history-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.history-header .section-title { border: none; margin: 0; padding: 0; }
-
 .nested-meds {
   list-style: none;
   margin: 8px 0 0 14px;
@@ -127,8 +265,22 @@ textarea {
   margin-bottom: 8px;
 }
 
+.allergy-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .allergy-substance { font-weight: 600; font-size: 14px; }
-.allergy-reaction { font-size: 13px; color: var(--text-muted); margin-left: 6px; }
+
+.allergy-reaction {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.allergy-reaction strong { color: var(--text); }
+
 .allergy-note {
   font-size: 12px;
   color: var(--text-muted);
@@ -221,6 +373,22 @@ button.secondary:hover { background: #eef5fc; }
 .record-list li:last-child { border-bottom: none; }
 .record-list .muted { color: var(--text-muted); font-size: 13px; }
 
+.card-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.card-header-row .section-title { margin: 0; border: none; padding: 0; }
+
+.med-row {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px;
+  margin-bottom: 8px;
+}
+
 .empty-note { color: var(--text-muted); font-size: 13px; font-style: italic; cursor: default; }
 
 .add-form { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
@@ -258,7 +426,7 @@ button.secondary:hover { background: #eef5fc; }
 
 #connectSphereBtn.connected:hover { background: #128a3e; }
 
-.sphere-modal-overlay {
+.modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
@@ -268,18 +436,25 @@ button.secondary:hover { background: #eef5fc; }
   z-index: 1000;
 }
 
-.sphere-modal-box {
+.modal-box {
   background: white;
   border-radius: 8px;
   position: relative;
-  width: 680px;
+  width: 420px;
   max-width: 90vw;
-  height: 640px;
   max-height: 85vh;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.modal-box-lg {
+  width: 1000px; /* widened to fit the SPHERE widget's own wider record view */
+  height: 680px;
+  padding: 0;
   overflow: hidden;
 }
 
-.sphere-modal-close {
+.modal-close {
   position: absolute;
   top: 6px;
   right: 10px;
@@ -291,7 +466,7 @@ button.secondary:hover { background: #eef5fc; }
   z-index: 1;
 }
 
-.sphere-modal-close:hover { background: none; color: var(--text); }
+.modal-close:hover { background: none; color: var(--text); }
 
 #sphereFrame {
   width: 100%;

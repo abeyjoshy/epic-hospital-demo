@@ -2,25 +2,56 @@ import { API } from "./api.js";
 import { state } from "./state.js";
 import { showPatient } from "./patients.js";
 
-// Wires up the single "Save Visit" action on the patient detail view.
+// Wires up the "Save Visit" action (diagnosis + any number of medications)
+// and the allergy add-form toggle.
 export function initRecords() {
   document.getElementById("saveVisitBtn").addEventListener("click", saveVisit);
+
+  document.getElementById("addMedRowBtn").addEventListener("click", () => {
+    document.getElementById("visitMedRows").appendChild(createMedRow());
+  });
+
+  document.getElementById("openAddAllergyBtn").addEventListener("click", () => {
+    const form = document.getElementById("addAllergyForm");
+    form.style.display = form.style.display === "none" ? "flex" : "none";
+  });
+
   document.getElementById("addAllergyBtn").addEventListener("click", addAllergy);
 }
 
-// One visit = one diagnosis (title + note) plus, optionally, one medication
-// prescribed for it. The two are separate database writes (there's no combined
-// endpoint), but from the doctor's side it's a single "Save Visit" action:
-// 1. create the diagnosis
-// 2. read back its _id from the response
-// 3. create the medication, linked to that _id
+// One medication input row, as its own small DOM chunk — built with
+// createElement instead of static HTML because a visit can have any number
+// of these, so each one's inputs are found by class (querySelector scoped to
+// the row), not by a fixed id like the old single-medication version used.
+function createMedRow() {
+  const row = document.createElement("div");
+  row.className = "add-form med-row";
+  row.innerHTML = `
+    <input type="text" class="med-name" placeholder="Medication" />
+    <input type="text" class="med-dosage" placeholder="Dosage" />
+    <input type="text" class="med-frequency" placeholder="Frequency" />
+    <input type="text" class="med-note" placeholder="Note (optional)" />
+    <button type="button" class="secondary remove-med-row">&times;</button>
+  `;
+  row.querySelector(".remove-med-row").addEventListener("click", () => row.remove());
+  return row;
+}
+
+// Clears the medication rows back to a single empty one. Exported so
+// patients.js can call it whenever a different patient's page is opened, so
+// leftover rows from a previous visit don't carry over.
+export function resetMedRows() {
+  const container = document.getElementById("visitMedRows");
+  container.innerHTML = "";
+  container.appendChild(createMedRow());
+}
+
+// One visit = one diagnosis (title + note) plus zero or more medications
+// prescribed for it, one per row currently in #visitMedRows. The diagnosis is
+// created first so its _id exists to link each medication to.
 async function saveVisit() {
   const label = document.getElementById("visitDiagnosis").value;
   const note = document.getElementById("visitNote").value;
-  const medName = document.getElementById("visitMedName").value;
-  const medDosage = document.getElementById("visitMedDosage").value;
-  const medFrequency = document.getElementById("visitMedFrequency").value;
-  const medNote = document.getElementById("visitMedNote").value;
 
   if (!label) return;
 
@@ -36,14 +67,26 @@ async function saveVisit() {
   const updatedDiagnoses = diagnosisData.patient.diagnoses;
   const newDiagnosis = updatedDiagnoses[updatedDiagnoses.length - 1]; // the push always appends, so it's last
 
-  if (medName) {
+  const medRows = document.querySelectorAll("#visitMedRows .med-row");
+
+  // Sequential, not parallel (Promise.all) — for a handful of rows the
+  // difference isn't noticeable, and doing them one at a time keeps this
+  // simple and matches everything else's plain await-in-order style.
+  for (const row of medRows) {
+    const name = row.querySelector(".med-name").value;
+    if (!name) continue; // an empty row (never filled in) is just skipped, not an error
+
+    const dosage = row.querySelector(".med-dosage").value;
+    const frequency = row.querySelector(".med-frequency").value;
+    const medNote = row.querySelector(".med-note").value;
+
     await fetch(`${API}/patients/${state.currentMrn}/medications`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        name: medName,
-        dosage: medDosage,
-        frequency: medFrequency,
+        name,
+        dosage,
+        frequency,
         note: medNote,
         diagnosisId: newDiagnosis._id,
       }),
@@ -52,10 +95,7 @@ async function saveVisit() {
 
   document.getElementById("visitDiagnosis").value = "";
   document.getElementById("visitNote").value = "";
-  document.getElementById("visitMedName").value = "";
-  document.getElementById("visitMedDosage").value = "";
-  document.getElementById("visitMedFrequency").value = "";
-  document.getElementById("visitMedNote").value = "";
+  resetMedRows();
 
   showPatient(state.currentMrn); // refresh so the new visit appears in history immediately
 }
@@ -77,6 +117,7 @@ async function addAllergy() {
     document.getElementById("newAllergySubstance").value = "";
     document.getElementById("newAllergyReaction").value = "";
     document.getElementById("newAllergyNote").value = "";
+    document.getElementById("addAllergyForm").style.display = "none"; // collapse it again
     showPatient(state.currentMrn);
   }
 }
