@@ -5,6 +5,7 @@ import getPatientByMrn from "../controllers/getPatientByMrn.controller.js";
 import addDiagnosis from "../controllers/addDiagnosis.controller.js";
 import addMedication from "../controllers/addMedication.controller.js";
 import addAllergies from "../controllers/addAllergies.controller.js";
+import createPatient from "../controllers/createPatient.controller.js"; 
 
 const router = Router();
 
@@ -14,5 +15,5 @@ router.get("/patients/:mrn", getPatientByMrn);
 router.post("/patients/:mrn/diagnoses", addDiagnosis);
 router.post("/patients/:mrn/medications", addMedication);
 router.post("/patients/:mrn/allergies", addAllergies);
-
+router.post("/patients", createPatient);
 export default router;

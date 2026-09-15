@@ -16,7 +16,7 @@ app.use(express.static("public"));
 async function initializeServer() {
     try {
         // ROUTES
-        app.use("/", routes);
+        app.use("/epic/", routes);
 
         // START SERVER
         const port = process.env.PORT || 4000;
