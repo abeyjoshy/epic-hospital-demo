@@ -1,10 +1,21 @@
 // Epic's half of the SPHERE connection: show/hide the widget modal, and listen
 // for the "connected" message the widget sends once login succeeds inside it.
 // Epic never reads the SPHERE token itself — it only reacts to this one message.
+import { state } from "./state.js";
+
 const SPHERE_ORIGIN = "http://localhost:3000";
 
 export function initSphere() {
   document.getElementById("connectSphereBtn").addEventListener("click", () => {
+    document.getElementById("sphereModal").style.display = "flex";
+  });
+
+  document.getElementById("accessSphereBtn").addEventListener("click", () => {
+    const frame = document.getElementById("sphereFrame");
+    // Reloading the iframe's src is fine — the cached SPHERE token lives in
+    // localStorage, which survives a reload; only the widget's in-memory JS
+    // state resets, and it re-checks localStorage on load anyway.
+    frame.src = `http://localhost:3000/widget.html?mrn=${encodeURIComponent(state.currentMrn)}`;
     document.getElementById("sphereModal").style.display = "flex";
   });
 
