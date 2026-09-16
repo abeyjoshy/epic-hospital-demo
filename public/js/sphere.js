@@ -25,6 +25,12 @@ export function initSphere() {
 
   document.getElementById("closeSphereModalBtn").addEventListener("click", () => {
     document.getElementById("sphereModal").style.display = "none";
+    // Reset the iframe to a neutral, no-patient URL on close — otherwise
+    // reopening it later (e.g. via the header's "SPHERE: Connected" badge,
+    // which never sets a fresh src) would just show whatever patient's
+    // record was last loaded, stale and possibly for the wrong patient.
+    const frame = document.getElementById("sphereFrame");
+    frame.src = `http://localhost:3000/widget.html?origin=${encodeURIComponent(EPIC_OWN_ORIGIN)}`;
   });
 
   document.getElementById("syncSphereBtn").addEventListener("click", () => {
