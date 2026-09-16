@@ -30,7 +30,7 @@ async function handleLogin() {
   document.getElementById("loginSection").style.display = "none";
   document.getElementById("appSection").style.display = "flex"; // .app-shell is a flex container
   document.getElementById("doctorInfo").style.display = "flex";
-  document.getElementById("doctorName").textContent = `Dr. ${data.doctor.name}`;
+  document.getElementById("doctorName").textContent = data.doctor.name;
 
   loadPatients();
 }
