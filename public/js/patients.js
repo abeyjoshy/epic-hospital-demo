@@ -1,6 +1,6 @@
 import { API } from "./api.js";
 import { state } from "./state.js";
-import { resetMedRows } from "./records.js";
+import { resetMeows } from "./records.js";
 
 // The old value (5) was an arbitrary small number left over from before the
 // list panel could scroll internally. Now that it can, a page can reasonably
@@ -123,7 +123,7 @@ export async function showPatient(mrn) {
   document.getElementById("detailName").textContent = `${patient.firstName} ${patient.lastName}`;
   document.getElementById("detailInfo").textContent = `MRN: ${patient.mrn}  |  DOB: ${patient.dob}  |  Sex: ${patient.sex}`;
 
-  resetMedRows();
+  resetMeows();
   document.getElementById("addAllergyForm").style.display = "none"; // collapsed by default on every fresh page load
 
   renderAllergies("detailAllergies", patient);

@@ -8,7 +8,7 @@ export function initRecords() {
   document.getElementById("saveVisitBtn").addEventListener("click", saveVisit);
 
   document.getElementById("addMedRowBtn").addEventListener("click", () => {
-    document.getElementById("visitMedRows").appendChild(createMedRow());
+    document.getElementById("visitMedRows").appendChild(createMeow());
   });
 
   document.getElementById("openAddAllergyBtn").addEventListener("click", () => {
@@ -23,7 +23,7 @@ export function initRecords() {
 // createElement instead of static HTML because a visit can have any number
 // of these, so each one's inputs are found by class (querySelector scoped to
 // the row), not by a fixed id like the old single-medication version used.
-function createMedRow() {
+function createMeow() {
   const row = document.createElement("div");
   row.className = "add-form med-row";
   row.innerHTML = `
@@ -40,14 +40,14 @@ function createMedRow() {
 // Clears the medication rows back to a single empty one. Exported so
 // patients.js can call it whenever a different patient's page is opened, so
 // leftover rows from a previous visit don't carry over.
-export function resetMedRows() {
+export function resetMeows() {
   const container = document.getElementById("visitMedRows");
   container.innerHTML = "";
-  container.appendChild(createMedRow());
+  container.appendChild(createMeow());
 }
 
 // One visit = one diagnosis (title + note) plus zero or more medications
-// prescribed for it, one per row currently in #visitMedRows. The diagnosis is
+// prescribed for it, one per row currently in #visitMeows. The diagnosis is
 // created first so its _id exists to link each medication to.
 async function saveVisit() {
   const label = document.getElementById("visitDiagnosis").value;
@@ -67,12 +67,12 @@ async function saveVisit() {
   const updatedDiagnoses = diagnosisData.patient.diagnoses;
   const newDiagnosis = updatedDiagnoses[updatedDiagnoses.length - 1]; // the push always appends, so it's last
 
-  const medRows = document.querySelectorAll("#visitMedRows .med-row");
+  const meows = document.querySelectorAll("#visitMedRows .med-row");
 
   // Sequential, not parallel (Promise.all) — for a handful of rows the
   // difference isn't noticeable, and doing them one at a time keeps this
   // simple and matches everything else's plain await-in-order style.
-  for (const row of medRows) {
+  for (const row of meows) {
     const name = row.querySelector(".med-name").value;
     if (!name) continue; // an empty row (never filled in) is just skipped, not an error
 
@@ -95,7 +95,7 @@ async function saveVisit() {
 
   document.getElementById("visitDiagnosis").value = "";
   document.getElementById("visitNote").value = "";
-  resetMedRows();
+  resetMeows();
 
   showPatient(state.currentMrn); // refresh so the new visit appears in history immediately
 }
