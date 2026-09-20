@@ -2,14 +2,19 @@
 // for the "connected" message the widget sends once login succeeds inside it.
 // Epic never reads the SPHERE token itself — it only reacts to this one message.
 import { state } from "./state.js";
+import { SPHERE_BASE_URL } from "./config.js";
 
-const SPHERE_ORIGIN = "http://localhost:3000";
 // Epic's own origin, told to the widget explicitly (via ?origin=) every time
 // its src is set — this is how a generic, vendor-agnostic widget knows who
 // it's talking to right now, instead of Epic being hardcoded inside it.
 const EPIC_OWN_ORIGIN = "http://localhost:4000";
 
 export function initSphere() {
+  // Set on load, from config, instead of epic.html hardcoding its own copy
+  // of the SPHERE URL in the iframe's static src attribute.
+  document.getElementById("sphereFrame").src =
+    `${SPHERE_BASE_URL}/widget.html?origin=${encodeURIComponent(EPIC_OWN_ORIGIN)}`;
+
   document.getElementById("connectSphereBtn").addEventListener("click", () => {
     document.getElementById("sphereModal").style.display = "flex";
   });
@@ -19,7 +24,7 @@ export function initSphere() {
     // Reloading the iframe's src is fine — the cached SPHERE token lives in
     // localStorage, which survives a reload; only the widget's in-memory JS
     // state resets, and it re-checks localStorage on load anyway.
-    frame.src = `http://localhost:3000/widget.html?mrn=${encodeURIComponent(state.currentMrn)}&origin=${encodeURIComponent(EPIC_OWN_ORIGIN)}`;
+    frame.src = `${SPHERE_BASE_URL}/widget.html?mrn=${encodeURIComponent(state.currentMrn)}&origin=${encodeURIComponent(EPIC_OWN_ORIGIN)}`;
     document.getElementById("sphereModal").style.display = "flex";
   });
 
@@ -30,7 +35,7 @@ export function initSphere() {
     // which never sets a fresh src) would just show whatever patient's
     // record was last loaded, stale and possibly for the wrong patient.
     const frame = document.getElementById("sphereFrame");
-    frame.src = `http://localhost:3000/widget.html?origin=${encodeURIComponent(EPIC_OWN_ORIGIN)}`;
+    frame.src = `${SPHERE_BASE_URL}/widget.html?origin=${encodeURIComponent(EPIC_OWN_ORIGIN)}`;
   });
 
   document.getElementById("syncSphereBtn").addEventListener("click", () => {
@@ -39,14 +44,14 @@ export function initSphere() {
     const frame = document.getElementById("sphereFrame");
     frame.contentWindow.postMessage(
       { type: "sphere-sync", mrn: state.currentMrn },
-      SPHERE_ORIGIN
+      SPHERE_BASE_URL
     );
   });
 
   window.addEventListener("message", (event) => {
     // Only trust messages that actually came from SPHERE's own origin —
     // without this check, any page could fake a "connected" message.
-    if (event.origin !== SPHERE_ORIGIN) return;
+    if (event.origin !== SPHERE_BASE_URL) return;
 
     if (event.data?.type === "sphere-connected") {
       document.getElementById("sphereModal").style.display = "none";
@@ -81,7 +86,7 @@ function setConnected() {
 // we just tell it, via postMessage, to forget its own cached token.
 export function disconnectSphere() {
   const frame = document.getElementById("sphereFrame");
-  frame.contentWindow.postMessage({ type: "sphere-logout" }, SPHERE_ORIGIN);
+  frame.contentWindow.postMessage({ type: "sphere-logout" }, SPHERE_BASE_URL);
 
   const btn = document.getElementById("connectSphereBtn");
   btn.textContent = "SPHERE: Not Connected";
